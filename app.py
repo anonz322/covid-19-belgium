@@ -86,8 +86,7 @@ def modify_doc(doc):
     p = make_plot(src)
     layout = row(controls, p)
     doc.add_root(layout)
-
-    
+'''
     
 @app.route('/', methods=['GET'])
 def bkapp_page():
@@ -103,7 +102,7 @@ def bk_worker():
     server.io_loop.start()
 
 from threading import Thread
-Thread(target=bk_worker).start()
+Thread(target=bk_worker).start()'''
 
 if __name__ == '__main__':
     print('Opening single process Flask app with embedded Bokeh application on http://localhost:8000/')
