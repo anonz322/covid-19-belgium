@@ -37,17 +37,17 @@ df2 = deaths.groupby("DATE").sum().merge(hosp.groupby("DATE").sum(), on="DATE")
 df2 = tmp.merge(df2, on="DATE", how='left').fillna(0).astype(int)
 df2 = df2[['CASES', 'DEATHS', 'TOTAL_IN', 'TOTAL_IN_ICU', 'NEW_IN', 'NEW_OUT']]
 
-categories = list(df2.columns)
-
 bar_cat = ['CASES', 'DEATHS', 'TOTAL_IN', 'TOTAL_IN_ICU']
 line_cat = ['NEW_IN', 'NEW_OUT']
+#categories = list(df2.columns)
+categories = bar_cat
 
 #easier to work with an un-tidy dataset in Bokeh
 def make_dataset(list_cat):
     #only chosen cat
     
     df_bar = df2[[i for i in list_cat if i in bar_cat]]
-    df_line = df2[[i for i in list_cat if i in line_cat]]
+    df_line = df2[line_cat]
     
     #df = df2[list_cat]
     plot_df_bar = df_bar.reset_index().melt(['DATE']).set_index('DATE').sort_index() #adios tidy data :/
@@ -79,11 +79,11 @@ def make_plot(src_bar, src_line):
            hover_fill_alpha = 1.0, line_color = 'black', width=dt.timedelta(1), \
                color='color', legend_group='variable')
     
-        
+    
     colors = {'NEW_IN':'red', 'NEW_OUT':'green'}
     for col in src_line.data:
         if col != 'DATE':
-            p.line(x='DATE', y=col, source=src_line, legend_group='variable', line_width=4, color=colors[col])
+            p.line(x='DATE', y=col, source=src_line, legend_group=col, line_width=4, color=colors[col])
     
     
     #define tooltips    
@@ -110,7 +110,7 @@ def update(attr, old, new):
 
 
 
-cat_selection = CheckboxGroup(labels=categories, active=[0, 1])
+cat_selection = CheckboxGroup(labels=bar_cat, active=[0, 1])
 cat_selection.on_change('active', update)
 
 controls = Column(cat_selection)
