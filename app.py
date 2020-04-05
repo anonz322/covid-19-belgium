@@ -68,6 +68,7 @@ def make_dataset(list_cat):
     plot_df_bar['variable'] = pd.Categorical(plot_df_bar['variable'],\
                         ['TOTAL_IN', 'CASES', 'TOTAL_IN_ICU','DEATHS'])
     plot_df_bar = plot_df_bar.sort_values(['variable'])
+    
     return ColumnDataSource(plot_df_bar)
 
 
@@ -116,11 +117,10 @@ def update(attr, old, new):
 cat_selection = CheckboxGroup(labels=bar_cat, active=[0, 1])
 cat_selection.on_change('active', update)
 
-controls = Column(cat_selection)
 init_cat = [cat_selection.labels[i] for i in cat_selection.active]
 
 
 src_bar = make_dataset(init_cat) 
 p = make_plot(src_bar)
-layout = row(controls, p)
+layout = Column(cat_selection, p)
 curdoc().add_root(layout)
