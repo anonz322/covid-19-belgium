@@ -35,7 +35,9 @@ deaths = pd.read_csv("https://epistat.sciensano.be/Data/COVID19BE_MORT.csv", enc
 tmp = pd.DataFrame(cases.groupby('DATE').sum()['CASES'])
 df2 = deaths.groupby("DATE").sum().merge(hosp.groupby("DATE").sum(), on="DATE")
 df2 = tmp.merge(df2, on="DATE", how='left').fillna(0).astype(int)
-categories = list(df2.drop('NR_REPORTING', axis=1).columns)
+df2 = df2[['CASES', 'DEATHS', 'TOTAL_IN', 'TOTAL_IN_ICU', 'NEW_IN', 'NEW_OUT']]
+
+categories = list(df2.columns)
 
 bar_cat = ['CASES', 'DEATHS', 'TOTAL_IN', 'TOTAL_IN_ICU']
 line_cat = ['NEW_IN', 'NEW_OUT']
@@ -49,7 +51,7 @@ def make_dataset(list_cat):
     
     #df = df2[list_cat]
     plot_df_bar = df_bar.reset_index().melt(['DATE']).set_index('DATE').sort_index() #adios tidy data :/
-    plot_df_line = df_line.reset_index().melt(['DATE']).set_index('DATE').sort_index() #adios tidy data :/
+    #plot_df_line = df_line.reset_index().melt(['DATE']).set_index('DATE').sort_index() #adios tidy data :/
     #new format as typical melted DF/"multi-index without being multiindexed" :
     #DATE  variable value
     #day-1 CASES     28
@@ -62,7 +64,8 @@ def make_dataset(list_cat):
     plot_df_bar["color"] = plot_df_bar["variable"].map(colors)
 
 
-    return ColumnDataSource(plot_df_bar), ColumnDataSource(plot_df_line)
+
+    return ColumnDataSource(plot_df_bar), ColumnDataSource(df_line)
 
 
 def make_plot(src_bar, src_line):
@@ -71,12 +74,17 @@ def make_plot(src_bar, src_line):
     # create a new plot with a datetime axis type
     p = figure(plot_width=700, plot_height=700, x_axis_type="datetime")
     
+    
     p.vbar(x='DATE', top='value', source = src_bar, fill_alpha = 0.7,\
            hover_fill_alpha = 1.0, line_color = 'black', width=dt.timedelta(1), \
                color='color', legend_group='variable')
+    
         
-    p.line(x='DATE', y='value', source=src_line, legend_group='variable',\
-          line_width=4)
+    colors = {'NEW_IN':'red', 'NEW_OUT':'green'}
+    for col in src_line.data:
+        if col != 'DATE':
+            p.line(x='DATE', y=col, source=src_line, legend_group='variable', line_width=4, color=colors[col])
+    
     
     #define tooltips    
     p.add_tools(HoverTool(tooltips = [('Date', '@DATE{%F}'), ('', '@variable: @value')],\
