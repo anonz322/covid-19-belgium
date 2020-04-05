@@ -35,13 +35,21 @@ deaths = pd.read_csv("https://epistat.sciensano.be/Data/COVID19BE_MORT.csv", enc
 tmp = pd.DataFrame(cases.groupby('DATE').sum()['CASES'])
 df2 = deaths.groupby("DATE").sum().merge(hosp.groupby("DATE").sum(), on="DATE")
 df2 = tmp.merge(df2, on="DATE", how='left').fillna(0).astype(int)
-categories = list(df2.columns)
+categories = list(df2.drop('NR_REPORTING', axis=1).columns)
+
+bar_cat = ['CASES', 'DEATHS', 'TOTAL_IN', 'TOTAL_IN_ICU']
+line_cat = ['NEW_IN', 'NEW_OUT']
 
 #easier to work with an un-tidy dataset in Bokeh
 def make_dataset(list_cat):
     #only chosen cat
-    df = df2[list_cat]
-    plot_df = df.reset_index().melt(['DATE']).set_index('DATE').sort_index() #adios tidy data :/
+    
+    df_bar = df2[[i for i in list_cat if i in bar_cat]]
+    df_line = df2[[i for i in list_cat if i in line_cat]]
+    
+    #df = df2[list_cat]
+    plot_df_bar = df_bar.reset_index().melt(['DATE']).set_index('DATE').sort_index() #adios tidy data :/
+    plot_df_line = df_line.reset_index().melt(['DATE']).set_index('DATE').sort_index() #adios tidy data :/
     #new format as typical melted DF/"multi-index without being multiindexed" :
     #DATE  variable value
     #day-1 CASES     28
@@ -50,20 +58,29 @@ def make_dataset(list_cat):
     
     #random colors !FIX ME: nice colors
     col_gen = lambda : "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
-    colors = {i:col_gen() for i in categories}
-    plot_df["color"] = plot_df["variable"].map(colors)
+    colors = {i:col_gen() for i in bar_cat}
+    plot_df_bar["color"] = plot_df_bar["variable"].map(colors)
+
+
+    return ColumnDataSource(plot_df_bar), ColumnDataSource(plot_df_line)
+
+
+def make_plot(src_bar, src_line):
+  
     
-    return ColumnDataSource(plot_df)
-
-
-def make_plot(src):
     # create a new plot with a datetime axis type
     p = figure(plot_width=700, plot_height=700, x_axis_type="datetime")
-    p.vbar(x='DATE', top='value', source = src, fill_alpha = 0.7,\
-           hover_fill_alpha = 1.0, line_color = 'black', width=dt.timedelta(1), color='color', legend='variable')
-
+    
+    p.vbar(x='DATE', top='value', source = src_bar, fill_alpha = 0.7,\
+           hover_fill_alpha = 1.0, line_color = 'black', width=dt.timedelta(1), \
+               color='color', legend_group='variable')
+        
+    p.line(x='DATE', y='value', source=src_line, legend_group='variable',\
+          line_width=4)
+    
     #define tooltips    
-    p.add_tools(HoverTool(tooltips = [('Date', '@DATE{%F}'), ('', '@variable: @value')], formatters={'@DATE': 'datetime'}, point_policy="follow_mouse"))
+    p.add_tools(HoverTool(tooltips = [('Date', '@DATE{%F}'), ('', '@variable: @value')],\
+                          formatters={'@DATE': 'datetime'}, point_policy="follow_mouse", mode="vline"))
 
     # attributes
     p.title.text = "Count"
@@ -79,8 +96,11 @@ def make_plot(src):
 def update(attr, old, new):
     #chosen cat
     cat_to_plot = [cat_selection.labels[i] for i in cat_selection.active]
-    new_df = make_dataset(cat_to_plot)
-    src.data.update(new_df.data)
+    new_bar, new_line = make_dataset(cat_to_plot)
+    src_bar.data.update(new_bar.data)
+    src_line.data.update(new_line.data)
+
+
 
 cat_selection = CheckboxGroup(labels=categories, active=[0, 1])
 cat_selection.on_change('active', update)
@@ -89,7 +109,7 @@ controls = Column(cat_selection)
 init_cat = [cat_selection.labels[i] for i in cat_selection.active]
 
 
-src = make_dataset(init_cat) 
-p = make_plot(src)
+src_bar, src_line = make_dataset(init_cat) 
+p = make_plot(src_bar, src_line)
 layout = row(controls, p)
 curdoc().add_root(layout)
