@@ -81,10 +81,9 @@ def make_plot(src_bar, src_line):
     
     
     colors = {'NEW_IN':'red', 'NEW_OUT':'green'}
-    for col in src_line.data:
-        if col != 'DATE':
-            p.line(x='DATE', y=col, source=src_line, legend_group='col', line_width=4, color=colors[col])
-    
+    p.line(x='DATE', y='NEW_IN', source=src_line, legend_label='NEW_IN', line_width=4, color=colors['NEW_IN'])
+    p.line(x='DATE', y='NEW_OUT', source=src_line, legend_label='NEW_OUT', line_width=4, color=colors['NEW_OUT'])
+
     
     #define tooltips    
     p.add_tools(HoverTool(tooltips = [('Date', '@DATE{%F}'), ('', '@variable: @value')],\
