@@ -6,7 +6,7 @@ Created on Wed Apr  1 17:27:37 2020
 @author: simonvdv
 """
 import pandas as pd
-#import numpy as np
+import numpy as np
 
 from bokeh.models import ColumnDataSource, Column
 from bokeh.models.tools import HoverTool
@@ -22,6 +22,8 @@ from tornado.ioloop import IOLoop
 
 import datetime as dt
 import random
+
+from scipy import optimize
 
 #Gather only used datas/other for eventual future uses:
 cases = pd.read_csv("https://epistat.sciensano.be/Data/COVID19BE_CASES_AGESEX.csv", encoding="ISO-8859-1", index_col="DATE", parse_dates=True)
@@ -53,48 +55,60 @@ def make_dataset(list_cat):
     #day-1 CASES     28
     #day-1 DEATHS    1
     #day-2 CASES (...)
-    
-    #random colors !FIX ME: nice colors
-    #deprecated :
-    #col_gen = lambda : "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
-    #colors = {i:col_gen() for i in bar_cat}
-    
+        
     colors = {'CASES':'grey', 'DEATHS':'darkgrey', 'TOTAL_IN':'orange', 'TOTAL_IN_ICU':'yellow'}
     
     plot_df_bar["color"] = plot_df_bar["variable"].map(colors)
     
-    #for better visibility : order by mean of variabl, in ascending order
+    #for better visibility : order 
     
     plot_df_bar['variable'] = pd.Categorical(plot_df_bar['variable'],\
                         ['TOTAL_IN', 'CASES', 'TOTAL_IN_ICU','DEATHS'])
     plot_df_bar = plot_df_bar.sort_values(['variable'])
+    
+
     
     return ColumnDataSource(plot_df_bar)
 
 
 def make_plot(src_bar):
   
-    
     # create a new plot with a datetime axis type
     p = figure(plot_width=700, plot_height=700, x_axis_type="datetime")
         
     p.vbar(x='DATE', top='value', source = src_bar, fill_alpha = 1,\
            hover_fill_alpha = 1.0, line_color = 'black', width=dt.timedelta(1), \
                color='color', legend='variable', name="vbars")
+
+###### TODO :        
+    if 'DEATHS' in src_bar.data['variable']: #fit gaussian func
+
+        x = [i for i in range(df2.shape[0])]
+        
+        def gaussian(x, amplitude, mean, stddev):
+            return amplitude * np.exp(-((x - mean) / 4 / stddev)**2)
+
+        popt, _ = optimize.curve_fit(gaussian, x, df2["DEATHS"])
+        
+        #pdf = 1/(sigma * np.sqrt(2*np.pi)) * np.exp(-(x-mu)**2 / (2*sigma**2))        
+        
+        p.line(x=df2.index, y=gaussian(x, *popt), line_width=4, color='blue')
     
-    
+        
+        
     
     colors = {'NEW_IN':'red', 'NEW_OUT':'green'}
     names = df_line.columns
-    for name in names:
-        p.line(x=df_line.index, y=df_line[name], legend_label=name, line_width=4, color=colors[name], name=name)
-    
+    for i in names:
+        p.line(x=df_line.index, y=df_line[i], legend_label=i, line_width=4, color=colors[i], name=i)
+        
+
 
     #define tooltips    
     p.add_tools(HoverTool(tooltips = [('Date', '@DATE{%F}'), ('', '@variable: @value')],\
                           formatters={'@DATE': 'datetime'}, point_policy="follow_mouse", mode="vline", names=["vbars"]))
         
-    p.add_tools(HoverTool(tooltips = [('', 'name: $y')],\
+    p.add_tools(HoverTool(tooltips = [('', '$name: @value')],\
                           point_policy="follow_mouse", mode="vline", names=list(names)))
 
     # attributes
