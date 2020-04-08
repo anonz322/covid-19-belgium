@@ -139,8 +139,8 @@ def make_plot_compare(cat):
         f.extra_y_ranges = {"france": Range1d(start=0, end=15000), 
                            "belgium": Range1d(start=0, end=1500)}
         
-    f.add_layout(LinearAxis(y_range_name="belgium", axis_label="belgium", axis_line_color='red', axis_text_color='red'), 'left')
-    f.add_layout(LinearAxis(y_range_name="france", axis_label="France", axis_line_color='blue', axis_text_color='blue'), 'right')        
+    f.add_layout(LinearAxis(y_range_name="belgium", axis_label="belgium", axis_line_color='red', axis_label_text_color='red'), 'left')
+    f.add_layout(LinearAxis(y_range_name="france", axis_label="France", axis_line_color='blue', axis_label_text_color='blue'), 'right')        
     
     f.vbar(x='DATE', top='value', source = plot_CDS_be, fill_alpha = 0.7,\
        width=dt.timedelta(1), \
