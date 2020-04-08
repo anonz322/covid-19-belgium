@@ -13,12 +13,12 @@ from bokeh.models.tools import HoverTool
 from bokeh.plotting import figure
 from bokeh.io import show, output_file, output_notebook, curdoc
 from bokeh.models.widgets import CheckboxGroup
-from bokeh.layouts import row, WidgetBox
+from bokeh.layouts import row, WidgetBox, grid
 from bokeh.application.handlers import FunctionHandler
 from bokeh.application import Application
 from bokeh.server.server import Server
 from bokeh.embed import server_document
-from tornado.ioloop import IOLoop
+from bokeh.models import LinearAxis, Range1d
 
 import datetime as dt
 import random
@@ -102,31 +102,8 @@ def make_plot(src_bar):
     p.yaxis.axis_label = 'Value'
     p.ygrid.band_fill_color = "olive"
     p.ygrid.band_fill_alpha = 0.1
-
-    f = figure(plot_width=700, plot_height=700, x_axis_type="datetime", title = "France")
-    list_cat = ['hosp', 'rea', 'dc']
-    french_bar = french[list_cat].reset_index().melt(['jour']).set_index('jour').sort_index() #adios tidy data :/
-    colors = {'hosp':'grey', 'rea':'darkgrey', 'dc':'orange', 'rad':'yellow'}
-    french_bar["color"] = french_bar["variable"].map(colors)
-
-    french_bar['variable'] = pd.Categorical(french_bar['variable'],\
-                        ['hosp', 'rad', 'rea','dc'])
-    french_bar = french_bar.sort_values(['variable'])
-
-    french_bar = ColumnDataSource(french_bar)
-
-    f.vbar(x='jour', top='value', source = french_bar, fill_alpha = 1,\
-           hover_fill_alpha = 1.0, width=dt.timedelta(1), \
-              line_color='black', color='color', legend='variable', name='french_bar')
-        
-    f.legend.location = "top_left"
-    f.grid.grid_line_alpha = 0
-    f.xaxis.axis_label = 'Date'
-    f.yaxis.axis_label = 'Value'
-    f.ygrid.band_fill_color = "olive"
-    f.ygrid.band_fill_alpha = 0.1
     
-    return p, f
+    return p
 
 def update(attr, old, new):
     #chosen cat
@@ -140,8 +117,56 @@ cat_selection.on_change('active', update)
 
 init_cat = [cat_selection.labels[i] for i in cat_selection.active]
 
-
 src_bar = make_dataset(init_cat) 
-p, f = make_plot(src_bar)
-layout = Column(cat_selection, p, f)
+p = make_plot(src_bar)
+
+df2_cross_french = df2.merge(french[['hosp', 'rea', 'dc']].groupby('jour').sum().reset_index().set_index('jour'), left_index=True, right_index=True, how='left').fillna(0).astype(int)
+
+def make_plot_compare(cat):
+    colors = {'hosp':'blue', 'rea':'blue', 'dc':'blue', 'TOTAL_IN':'red', 'TOTAL_IN_ICU':'red', 'DEATHS':'red'}
+    f = figure(plot_width=400, plot_height=400, x_axis_type="datetime", title = "France (blue) vs Belgium (red) : {}".format(cat))
+    plot_df_bar = df2_cross_french[cat].reset_index().melt(['DATE']).set_index('DATE').sort_index()
+    plot_df_bar["color"] = plot_df_bar["variable"].map(colors)
+    
+    
+    plot_CDS_be = ColumnDataSource(plot_df_bar[plot_df_bar["color"]=='red'])
+    plot_CDS_fr = ColumnDataSource(plot_df_bar[plot_df_bar["color"]=='blue'])
+            
+    
+    f.vbar(x='DATE', top='value', source = plot_CDS_be, fill_alpha = 0.7,\
+       width=dt.timedelta(1), \
+       line_color='black', color='color')
+
+    if 'hosp' in cat:
+        f.y_range = Range1d(0, 6000)
+        f.extra_y_ranges = {"france": Range1d(start=0, end=60000)}
+    else:
+        f.extra_y_ranges = {"france": Range1d(start=0, end=15000)}
+        f.y_range = Range1d(0, 1500)
+
+    f.add_layout(LinearAxis(y_range_name="france", axis_label="France", axis_line_color='blue'), 'right')
+    f.vbar(x='DATE', top='value', source = plot_CDS_fr, fill_alpha = 0.7,\
+       width=dt.timedelta(1), \
+       line_color='black', color='color', y_range_name='france')
+        
+    f.grid.grid_line_alpha = 0
+    f.xaxis.axis_label = 'Date'
+    f.ygrid.band_fill_color = "olive"
+    f.ygrid.band_fill_alpha = 0.1
+    
+    return f
+
+
+
+total = make_plot_compare(['hosp', 'TOTAL_IN'])
+
+icu = make_plot_compare(['rea', 'TOTAL_IN_ICU'])
+
+deaths = make_plot_compare(['dc', 'DEATHS'])
+
+
+
+layout = grid([[cat_selection], [p], [total, icu], [None, deaths]])
+
+
 curdoc().add_root(layout)
