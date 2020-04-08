@@ -131,16 +131,19 @@ def make_plot_compare(cat):
     
     plot_CDS_be = ColumnDataSource(plot_df_bar[plot_df_bar["color"]=='red'])
     plot_CDS_fr = ColumnDataSource(plot_df_bar[plot_df_bar["color"]=='blue'])
-            
+    
+    f.yaxis.major_label_text_color = "red"
+    f.yaxis.axis_label = "Belgium"
+    
     if 'hosp' in cat:
-        f.extra_y_ranges = {"france": Range1d(start=0, end=60000),
-                           "belgium": Range1d(start=0, end=6000)}
-    else:
-        f.extra_y_ranges = {"france": Range1d(start=0, end=15000), 
-                           "belgium": Range1d(start=0, end=1500)}
+        f.y_ranges = Range1d(start=0, end=6000)
+        f.extra_y_ranges = {"France": Range1d(start=0, end=60000)}
         
-    f.add_layout(LinearAxis(y_range_name="belgium", axis_label="belgium", axis_line_color='red', axis_label_text_color='red'), 'left')
-    f.add_layout(LinearAxis(y_range_name="france", axis_label="France", axis_line_color='blue', axis_label_text_color='blue'), 'right')        
+    else:
+        f.y_ranges = Range1d(start=0, end=1500)
+        f.extra_y_ranges = {"France": Range1d(start=0, end=15000)}
+        
+    f.add_layout(LinearAxis(y_range_name="France", axis_label="France", axis_line_color='blue', axis_label_text_color='blue'), 'right')        
     
     f.vbar(x='DATE', top='value', source = plot_CDS_be, fill_alpha = 0.7,\
        width=dt.timedelta(1), \
