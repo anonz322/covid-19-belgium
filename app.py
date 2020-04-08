@@ -151,7 +151,7 @@ def make_plot_compare(cat):
         
     f.vbar(x='DATE', top='value', source = plot_CDS_fr, fill_alpha = 0.7,\
        width=dt.timedelta(1), \
-       line_color='black', color='color', y_range_name='france', legend_label='Fr')
+       line_color='black', color='color', y_range_name='France', legend_label='Fr')
         
     f.grid.grid_line_alpha = 0
     f.xaxis.axis_label = 'Date'
