@@ -33,6 +33,8 @@ hosp = pd.read_csv("https://epistat.sciensano.be/Data/COVID19BE_HOSP.csv", encod
 deaths = pd.read_csv("https://epistat.sciensano.be/Data/COVID19BE_MORT.csv", encoding="ISO-8859-1", index_col="DATE", parse_dates=True)
 #tests = pd.read_csv("https://epistat.sciensano.be/Data/COVID19BE_tests.csv", encoding="ISO-8859-1", index_col="DATE", parse_dates=True)
 
+french = pd.read_csv("https://raw.githubusercontent.com/opencovid19-fr/data/master/data-sources/sante-publique-france/covid_hospit.csv",\
+                     sep=";", index_col="jour", parse_dates=True)
 
 tmp = pd.DataFrame(cases.groupby('DATE').sum()['CASES'])
 df2 = deaths.groupby("DATE").sum().merge(hosp.groupby("DATE").sum(), on="DATE")
@@ -74,7 +76,7 @@ def make_dataset(list_cat):
 def make_plot(src_bar):
   
     # create a new plot with a datetime axis type
-    p = figure(plot_width=700, plot_height=700, x_axis_type="datetime")
+    p = figure(plot_width=700, plot_height=700, x_axis_type="datetime", title = "Belgique")
         
     p.vbar(x='DATE', top='value', source = src_bar, fill_alpha = 1,\
            hover_fill_alpha = 1.0, line_color = 'black', width=dt.timedelta(1), \
@@ -119,7 +121,30 @@ def make_plot(src_bar):
     p.ygrid.band_fill_color = "olive"
     p.ygrid.band_fill_alpha = 0.1
 
-    return p
+    f = figure(plot_width=700, plot_height=700, x_axis_type="datetime", title = "France")
+    list_cat = ['hosp', 'rea', 'dc']
+    french_bar = french[list_cat].reset_index().melt(['jour']).set_index('jour').sort_index() #adios tidy data :/
+    colors = {'hosp':'grey', 'rea':'darkgrey', 'dc':'orange', 'rad':'yellow'}
+    french_bar["color"] = french_bar["variable"].map(colors)
+
+    french_bar['variable'] = pd.Categorical(french_bar['variable'],\
+                        ['hosp', 'rad', 'rea','dc'])
+    french_bar = french_bar.sort_values(['variable'])
+
+    french_bar = ColumnDataSource(french_bar)
+
+    f.vbar(x='jour', top='value', source = french_bar, fill_alpha = 1,\
+           hover_fill_alpha = 1.0, width=dt.timedelta(1), \
+              line_color='black', color='color', legend='variable', name='french_bar')
+        
+    f.legend.location = "top_left"
+    f.grid.grid_line_alpha = 0
+    f.xaxis.axis_label = 'Date'
+    f.yaxis.axis_label = 'Value'
+    f.ygrid.band_fill_color = "olive"
+    f.ygrid.band_fill_alpha = 0.1
+    
+    return p, f
 
 def update(attr, old, new):
     #chosen cat
@@ -128,13 +153,13 @@ def update(attr, old, new):
     src_bar.data.update(new_bar.data)
 
 
-cat_selection = CheckboxGroup(labels=bar_cat, active=[0, 1])
+cat_selection = CheckboxGroup(labels=bar_cat, active=[1, 2, 3])
 cat_selection.on_change('active', update)
 
 init_cat = [cat_selection.labels[i] for i in cat_selection.active]
 
 
 src_bar = make_dataset(init_cat) 
-p = make_plot(src_bar)
-layout = Column(cat_selection, p)
+p, f = make_plot(src_bar)
+layout = Column(cat_selection, p, f)
 curdoc().add_root(layout)
