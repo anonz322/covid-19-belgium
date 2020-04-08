@@ -132,22 +132,23 @@ def make_plot_compare(cat):
     plot_CDS_be = ColumnDataSource(plot_df_bar[plot_df_bar["color"]=='red'])
     plot_CDS_fr = ColumnDataSource(plot_df_bar[plot_df_bar["color"]=='blue'])
             
+    if 'hosp' in cat:
+        f.extra_y_ranges = {"france": Range1d(start=0, end=60000),
+                           "belgium": Range1d(start=0, end=6000)}
+    else:
+        f.extra_y_ranges = {"france": Range1d(start=0, end=15000), 
+                           "belgium": Range1d(start=0, end=1500)}
+        
+    f.add_layout(LinearAxis(y_range_name="belgium", axis_label="belgium", axis_line_color='red', axis_text_color='red'), 'left')
+    f.add_layout(LinearAxis(y_range_name="france", axis_label="France", axis_line_color='blue', axis_text_color='blue'), 'right')        
     
     f.vbar(x='DATE', top='value', source = plot_CDS_be, fill_alpha = 0.7,\
        width=dt.timedelta(1), \
-       line_color='black', color='color')
-
-    if 'hosp' in cat:
-        f.y_range = Range1d(0, 6000)
-        f.extra_y_ranges = {"france": Range1d(start=0, end=60000)}
-    else:
-        f.extra_y_ranges = {"france": Range1d(start=0, end=15000)}
-        f.y_range = Range1d(0, 1500)
-
-    f.add_layout(LinearAxis(y_range_name="france", axis_label="France", axis_line_color='blue'), 'right')
+       line_color='black', color='color', legend_label='Be')
+        
     f.vbar(x='DATE', top='value', source = plot_CDS_fr, fill_alpha = 0.7,\
        width=dt.timedelta(1), \
-       line_color='black', color='color', y_range_name='france')
+       line_color='black', color='color', y_range_name='france', legend_label='Fr')
         
     f.grid.grid_line_alpha = 0
     f.xaxis.axis_label = 'Date'
@@ -166,7 +167,7 @@ icu = make_plot_compare(['rea', 'TOTAL_IN_ICU'])
 
 
 
-layout = grid([[cat_selection], [p], [total, icu], [None, deaths]])
+layout = grid([[cat_selection], [p], [total, icu]])
 
 
 curdoc().add_root(layout)
