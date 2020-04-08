@@ -82,22 +82,6 @@ def make_plot(src_bar):
            hover_fill_alpha = 1.0, line_color = 'black', width=dt.timedelta(1), \
                color='color', legend='variable', name="vbars")
 
-###### TODO :        
-    if 'DEATHS' in src_bar.data['variable']: #fit gaussian func
-
-        x = [i for i in range(df2.shape[0])]
-        
-        def gaussian(x, amplitude, mean, stddev):
-            return amplitude * np.exp(-((x - mean) / 4 / stddev)**2)
-
-        popt, _ = optimize.curve_fit(gaussian, x, df2["DEATHS"])
-        
-        #pdf = 1/(sigma * np.sqrt(2*np.pi)) * np.exp(-(x-mu)**2 / (2*sigma**2))        
-        
-        p.line(x=df2.index, y=gaussian(x, *popt), line_width=4, color='blue')
-    
-        
-        
     
     colors = {'NEW_IN':'red', 'NEW_OUT':'green'}
     names = df_line.columns
