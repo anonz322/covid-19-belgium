@@ -132,7 +132,7 @@ def make_plot_compare(cat):
     plot_CDS_be = ColumnDataSource(plot_df_bar[plot_df_bar["color"]=='red'])
     plot_CDS_fr = ColumnDataSource(plot_df_bar[plot_df_bar["color"]=='blue'])
     
-    f.yaxis.major_label_text_color = "red"
+    f.yaxis.axis_label_text_color = "red"
     f.yaxis.axis_label = "Belgium"
     
     if 'hosp' in cat:
@@ -147,11 +147,11 @@ def make_plot_compare(cat):
     
     f.vbar(x='DATE', top='value', source = plot_CDS_be, fill_alpha = 0.7,\
        width=dt.timedelta(1), \
-       line_color='black', color='color', legend_label='Be')
+       line_color='black', color='color')
         
     f.vbar(x='DATE', top='value', source = plot_CDS_fr, fill_alpha = 0.7,\
        width=dt.timedelta(1), \
-       line_color='black', color='color', y_range_name='France', legend_label='Fr')
+       line_color='black', color='color', y_range_name='France')
         
     f.grid.grid_line_alpha = 0
     f.xaxis.axis_label = 'Date'
