@@ -162,7 +162,7 @@ total = make_plot_compare(['hosp', 'TOTAL_IN'])
 
 icu = make_plot_compare(['rea', 'TOTAL_IN_ICU'])
 
-deaths = make_plot_compare(['dc', 'DEATHS'])
+#deaths = make_plot_compare(['dc', 'DEATHS'])
 
 
 
