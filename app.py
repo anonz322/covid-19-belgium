@@ -23,8 +23,6 @@ from tornado.ioloop import IOLoop
 import datetime as dt
 import random
 
-from scipy import optimize
-
 #Gather only used datas/other for eventual future uses:
 cases = pd.read_csv("https://epistat.sciensano.be/Data/COVID19BE_CASES_AGESEX.csv", encoding="ISO-8859-1", index_col="DATE", parse_dates=True)
 #muni = pd.read_csv("https://epistat.sciensano.be/Data/COVID19BE_CASES_MUNI.csv", encoding="ISO-8859-1", index_col="DATE", parse_dates=True)
