@@ -136,11 +136,11 @@ def make_plot_compare(cat):
     f.yaxis.axis_label = "Belgium"
     
     if 'hosp' in cat:
-        f.y_ranges = Range1d(start=0, end=6000)
+        f.y_range = Range1d(start=0, end=6000)
         f.extra_y_ranges = {"France": Range1d(start=0, end=60000)}
         
     else:
-        f.y_ranges = Range1d(start=0, end=1500)
+        f.y_range = Range1d(start=0, end=1500)
         f.extra_y_ranges = {"France": Range1d(start=0, end=15000)}
         
     f.add_layout(LinearAxis(y_range_name="France", axis_label="France", axis_line_color='blue', axis_label_text_color='blue'), 'right')        
