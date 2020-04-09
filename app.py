@@ -12,7 +12,7 @@ from bokeh.models import ColumnDataSource, Column
 from bokeh.models.tools import HoverTool
 from bokeh.plotting import figure
 from bokeh.io import show, output_file, output_notebook, curdoc
-from bokeh.models.widgets import CheckboxGroup
+from bokeh.models.widgets import CheckboxGroup, Panel, Tabs
 from bokeh.layouts import row, WidgetBox, grid
 from bokeh.application.handlers import FunctionHandler
 from bokeh.application import Application
@@ -124,7 +124,7 @@ df2_cross_french = df2.merge(french[['hosp', 'rea', 'dc']].groupby('jour').sum()
 
 def make_plot_compare(cat):
     colors = {'hosp':'blue', 'rea':'blue', 'dc':'blue', 'TOTAL_IN':'red', 'TOTAL_IN_ICU':'red', 'DEATHS':'red'}
-    f = figure(plot_width=400, plot_height=400, x_axis_type="datetime", title = "France (blue) vs Belgium (red) : {}".format(cat))
+    f = figure(plot_width=700, plot_height=700, x_axis_type="datetime", title = "France (blue) vs Belgium (red) : {}".format(cat))
     plot_df_bar = df2_cross_french[cat].reset_index().melt(['DATE']).set_index('DATE').sort_index()
     plot_df_bar["color"] = plot_df_bar["variable"].map(colors)
     
@@ -145,11 +145,11 @@ def make_plot_compare(cat):
         
     f.add_layout(LinearAxis(y_range_name="France", axis_label="France", axis_line_color='blue', axis_label_text_color='blue'), 'right')        
     
-    f.vbar(x='DATE', top='value', source = plot_CDS_be, fill_alpha = 0.7,\
+    f.vbar(x='DATE', top='value', source = plot_CDS_be, fill_alpha = 0.5,\
        width=dt.timedelta(1), \
        line_color='black', color='color')
         
-    f.vbar(x='DATE', top='value', source = plot_CDS_fr, fill_alpha = 0.7,\
+    f.vbar(x='DATE', top='value', source = plot_CDS_fr, fill_alpha = 0.5,\
        width=dt.timedelta(1), \
        line_color='black', color='color', y_range_name='France')
         
@@ -163,14 +163,16 @@ def make_plot_compare(cat):
 
 
 total = make_plot_compare(['hosp', 'TOTAL_IN'])
+tab1 = Panel(child=total, title="Total")
 
 icu = make_plot_compare(['rea', 'TOTAL_IN_ICU'])
+tab2 = Panel(child=icu, title="ICU")
 
 #deaths = make_plot_compare(['dc', 'DEATHS'])
 
+tabs = Tabs(tabs=[tab1, tab2])
 
-
-layout = grid([[cat_selection], [p], [total, icu]])
+layout = grid([[cat_selection], [p], [tabs]])
 
 
 curdoc().add_root(layout)
