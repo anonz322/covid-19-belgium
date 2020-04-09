@@ -124,7 +124,7 @@ df2_cross_french = df2.merge(french[['hosp', 'rea', 'dc']].groupby('jour').sum()
 
 def make_plot_compare(cat):
     colors = {'hosp':'blue', 'rea':'blue', 'dc':'blue', 'TOTAL_IN':'red', 'TOTAL_IN_ICU':'red', 'DEATHS':'red'}
-    f = figure(plot_width=700, plot_height=700, x_axis_type="datetime", title = "France (blue) vs Belgium (red) : {}".format(cat))
+    f = figure(plot_width=700, plot_height=700, x_axis_type="datetime", title = "France vs Belgium")
     plot_df_bar = df2_cross_french[cat].reset_index().melt(['DATE']).set_index('DATE').sort_index()
     plot_df_bar["color"] = plot_df_bar["variable"].map(colors)
     
@@ -147,16 +147,19 @@ def make_plot_compare(cat):
     
     f.vbar(x='DATE', top='value', source = plot_CDS_be, fill_alpha = 0.5,\
        width=dt.timedelta(1), \
-       line_color='black', color='color')
+       line_color='black', color='color', legend_label="Be")
         
     f.vbar(x='DATE', top='value', source = plot_CDS_fr, fill_alpha = 0.5,\
        width=dt.timedelta(1), \
-       line_color='black', color='color', y_range_name='France')
-        
+       line_color='black', color='color', y_range_name='France', legend_label="Fr")
+    
+    f.legend.location = "top_left"
     f.grid.grid_line_alpha = 0
     f.xaxis.axis_label = 'Date'
     f.ygrid.band_fill_color = "olive"
     f.ygrid.band_fill_alpha = 0.1
+
+
     
     return f
 
